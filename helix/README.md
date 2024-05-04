@@ -7,7 +7,7 @@ To provide an easy way to use the Helix text editor on systems that don't have i
 ## Usage
 
 ```bash
-alias hx='docker run --rm -it -w /work -v "$PWD":/work tangowithfoxtrot/helix'
+alias hx='docker run --rm -it -w /work -v "$PWD":/work -v ~/.config/helix:/home/helix/.config/helix tangowithfoxtrot/helix'
 hx some_file
 ```
 

@@ -27,6 +27,7 @@ RUN strip ./target/release/release/hx
 
 FROM scratch
 ARG TARGETPLATFORM
+ENV HOME=/home/helix
 
 # copy bin
 COPY --from=builder /app/helix/target/release/release/hx /bin/hx
