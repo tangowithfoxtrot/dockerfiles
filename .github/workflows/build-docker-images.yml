@@ -1,0 +1,68 @@
+name: Push to Container Registry
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Push to ttl.sh to test"
+        default: true
+        type: boolean
+
+      image_target:
+        description: "The image to release"
+        default: "test"
+        type: "string"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+
+      - name: Bitwarden Secrets Manager GitHub Action
+        uses: bitwarden/sm-action@92d1d6a4f26a89a8191c83ab531a53544578f182 # v2.0.0
+        if: ${{ inputs.test != true }}
+        with:
+          access_token: ${{ secrets.ACCESS_TOKEN }}
+          secrets: |
+            d8a56663-858c-4aac-b0a2-afcd00edf2f1 > DOCKER_USER
+            98fc7325-57d2-4910-b37c-afcd00ed81b7 > DOCKER_PASSWORD
+
+      - name: docker login
+        if: ${{ inputs.test != true }}
+        run: docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+
+      - name: set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: set up Docker Buildx
+        uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+        with:
+          platforms: ${{ matrix.platform }}
+
+      - name: prepare for test
+        if: ${{ inputs.test == true }}
+        run: |
+          echo "DOCKER_USER=ttl.sh" >> "$GITHUB_ENV"
+          mkdir -p ./${{ inputs.image_target }} && cd $_
+          echo -e 'FROM alpine:latest\nENTRYPOINT echo hello' > Dockerfile
+
+      - name: build images
+        working-directory: ./${{ inputs.image_target }}
+        run: |
+          docker buildx build . --file Dockerfile --tag "$DOCKER_USER"/${{ inputs.image_target }}:latest
+        # \
+        # --tag "$DOCKER_USER"/${{ inputs.image_target }}:${{ github.event.inputs.version }} \
+        # --tag "$DOCKER_USER"/${{ inputs.image_target }}:v${{ github.event.inputs.version }}
+
+      - name: docker push
+        working-directory: ./${{ inputs.image_target }}
+        run: docker push -a "$DOCKER_USER"/${{ inputs.image_target }}
