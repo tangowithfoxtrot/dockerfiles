@@ -1,6 +1,6 @@
 FROM --platform=$TARGETPLATFORM alpine:latest as builder
 ARG TARGETPLATFORM
-ARG VERSION=8.7.1
+ARG VERSION=8.8.0
 
 # the following build steps were heavily derived from:
 # https://github.com/moparisthebest/static-curl
