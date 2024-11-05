@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM ubuntu:latest as builder
+FROM --platform=$BUILDPLATFORM ubuntu:latest AS builder
 ARG TARGETPLATFORM
 ARG VERSION
 WORKDIR /app
