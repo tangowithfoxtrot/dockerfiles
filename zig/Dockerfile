@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM ubuntu:latest as zig
+FROM --platform=$BUILDPLATFORM ubuntu:latest AS zig
 ARG TARGETPLATFORM
 ARG VERSION=0.13.0
 WORKDIR /
