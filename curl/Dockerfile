@@ -1,6 +1,5 @@
-FROM --platform=$TARGETPLATFORM alpine:latest as builder
-ARG TARGETPLATFORM
-ARG VERSION=8.8.0
+FROM alpine:latest AS builder
+ARG VERSION=8.10.1
 
 # the following build steps were heavily derived from:
 # https://github.com/moparisthebest/static-curl
@@ -34,8 +33,7 @@ RUN LDFLAGS="-static" PKG_CONFIG="pkg-config --static" ./configure \
 RUN make -j$(nproc) V=1 LDFLAGS="-static -all-static"
 RUN strip src/curl
 
-FROM --platform=$TARGETPLATFORM scratch
-ARG TARGETPLATFORM
+FROM scratch
 
 COPY --from=builder /work/curl/src/curl /bin/curl
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
