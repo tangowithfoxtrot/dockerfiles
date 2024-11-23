@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM --platform=linux/amd64 messense/cargo-zigbuild AS builder
 ARG VERSION
 

@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM --platform=$BUILDPLATFORM ubuntu:latest AS zig
 ARG TARGETPLATFORM
 ARG VERSION=0.13.0
@@ -5,8 +8,8 @@ WORKDIR /
 
 RUN apt-get update && \
   apt-get install -y \
-    wget \
-    xz-utils
+  wget \
+  xz-utils
 
 RUN <<eof
   case "$TARGETPLATFORM" in

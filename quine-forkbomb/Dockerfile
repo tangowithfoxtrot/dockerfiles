@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM rust:1.81
 
 WORKDIR /app

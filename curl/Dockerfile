@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM alpine:latest AS builder
 ARG VERSION=8.10.1
 

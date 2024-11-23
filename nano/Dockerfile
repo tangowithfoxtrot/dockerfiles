@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM --platform=$BUILDPLATFORM ubuntu:latest AS builder
 ARG TARGETPLATFORM
 ARG VERSION
@@ -5,17 +8,17 @@ WORKDIR /app
 
 RUN apt-get update && \
   apt-get install -y \
-    autoconf \
-    automake \
-    autopoint \
-    gcc \
-    gettext \
-    git \
-    groff \
-    libncurses-dev \
-    make \
-    pkg-config \
-    texinfo
+  autoconf \
+  automake \
+  autopoint \
+  gcc \
+  gettext \
+  git \
+  groff \
+  libncurses-dev \
+  make \
+  pkg-config \
+  texinfo
 
 RUN git clone git://git.savannah.gnu.org/nano.git && \
   cd nano && \

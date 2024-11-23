@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile-upstream:master-labs
+# check=experimental=all
+
 FROM gists/speedtest-cli:latest as builder
 ARG TARGETPLATFORM
 RUN mkdir /lib-sh
