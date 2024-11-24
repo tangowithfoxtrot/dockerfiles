@@ -2,11 +2,11 @@
 # check=experimental=all
 
 FROM alpine/git:latest AS git
-ARG VERSION=8.2
+ARG VERSION=v8.2
 RUN --mount=type=ssh \
   git clone https://git.savannah.gnu.org/git/nano.git /nano && \
   cd /nano && \
-  git checkout v${VERSION}
+  git checkout ${VERSION} || git checkout v${VERSION}
 
 FROM --platform=$BUILDPLATFORM ubuntu:latest AS builder
 RUN DEBIAN_FRONTEND=noninteractive \
