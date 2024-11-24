@@ -47,4 +47,6 @@ jobs:
           DOINDOCKER_BUILD_TOOLS: bash curl github-cli git jq ncurses # Docker image is Alpine-based
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_PAT: ${{ env.REGISTRY_PAT }}
+          ATTESTATION_ARGS: --attest type=sbom --attest type=provenance
+          VERBOSE: 0
           NO_COLOR: 1

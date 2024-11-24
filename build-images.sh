@@ -21,6 +21,8 @@ DOINDOCKER_BUILD_TOOLS="${DOINDOCKER_BUILD_TOOLS:-bash curl github-cli git jq nc
 REGISTRY_USER="${REGISTRY_USER:-$CONTAINER_REPO}"                                          # username for the registry
 REGISTRY_PAT="${REGISTRY_PAT:-$(gh auth status || echo -n)}"                               # personal access token for the registry
 REPO_ROOT="$(git rev-parse --show-toplevel)"                                               # root of the repo; should never be overridden
+ATTESTATION_ARGS="${ATTESTATION_ARGS:---attest type=sbom --attest type=provenance}"        # supply chain attestation arguments
+VERBOSE="${VERBOSE:-0}"                                                                    # set to '1' to enable verbose output
 # end of vars that must be duplicated in the do_in_docker function
 
 THIS_VERSION="0.0.1"                                 # version of this script
@@ -50,6 +52,20 @@ $(tput bold)$(tput smul)Options:$(tput sgr0)
   $(tput bold)-b,     --build$(tput sgr0)   Build the docker images
   $(tput bold)-p,     --push$(tput sgr0)    Push the docker images
   $(tput bold)-u,     --update$(tput sgr0)  Pull the latest version number for the upstream project
+
+$(tput bold)$(tput smul)Env:$(tput sgr0)
+  $(tput bold)BUILD_PLATFORMS$(tput sgr0): $(tput setaf 016)$BUILD_PLATFORMS$(tput sgr0)
+  $(tput bold)CURL_ARGS$(tput sgr0): (ex: --header "Authorization Bearer ****")
+  $(tput bold)CONTAINER_BUILD_CONTEXTS$(tput sgr0): (ex: ./curl, ./nano, etc.)
+  $(tput bold)CONTAINER_REGISTRY$(tput sgr0): $(tput setaf 016)$CONTAINER_REGISTRY$(tput sgr0)
+  $(tput bold)CONTAINER_REPO$(tput sgr0): $(tput setaf 016)$CONTAINER_REPO$(tput sgr0)
+  $(tput bold)CONTAINER_ENGINE_SOCKET$(tput sgr0): $(tput setaf 016)$CONTAINER_ENGINE_SOCKET$(tput sgr0)
+  $(tput bold)DOINDOCKER$(tput sgr0): $(tput setaf 016)$DOINDOCKER$(tput sgr0)
+  $(tput bold)DOINDOCKER_BUILD_TOOLS$(tput sgr0): $(tput setaf 016)$DOINDOCKER_BUILD_TOOLS$(tput sgr0)
+  $(tput bold)REGISTRY_USER$(tput sgr0): $(tput setaf 016)$REGISTRY_USER$(tput sgr0)
+  $(tput bold)REGISTRY_PAT$(tput sgr0): (ex: dckr_pat_****)
+  $(tput bold)ATTESTATION_ARGS$(tput sgr0): $(tput setaf 016)$ATTESTATION_ARGS$(tput sgr0)
+  $(tput bold)VERBOSE$(tput sgr0): $(tput setaf 016)$VERBOSE$(tput sgr0)
 EOF
 }
 
@@ -115,6 +131,8 @@ do_in_docker() {
       -e REGISTRY_USER="$REGISTRY_USER" \
       -e REGISTRY_PAT="$REGISTRY_PAT" \
       -e REPO_ROOT="$REPO_ROOT" \
+      -e ATTESTATION_ARGS="$ATTESTATION_ARGS" \
+      -e VERBOSE="$VERBOSE" \
       --stop-signal SIGKILL \
       docker:latest \
       tail -f /dev/null
@@ -274,6 +292,7 @@ build_docker() {
     docker build \
       --platform "$BUILD_PLATFORMS" \
       --build-arg VERSION="$version" \
+      $ATTESTATION_ARGS \
       -t "$oci_uri" \
       "$context" || { log "Failed to build $oci_uri. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
 
