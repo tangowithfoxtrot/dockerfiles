@@ -115,14 +115,14 @@ do_in_docker() {
       -e REGISTRY_USER="$REGISTRY_USER" \
       -e REGISTRY_PAT="$REGISTRY_PAT" \
       -e REPO_ROOT="$REPO_ROOT" \
-      -u "$(id -u):$(id -g)" \
       --stop-signal SIGKILL \
       docker:latest \
       tail -f /dev/null
   )
 
   docker exec $IS_TTY "$container_id" /bin/sh -c "
-    apk add --no-cache $DOINDOCKER_BUILD_TOOLS
+    apk add --no-cache $DOINDOCKER_BUILD_TOOLS || { echo failed && exit 1; }
+    git config --global --add safe.directory $REPO_ROOT || { echo failed && exit 1; }
     exec ./build-images.sh $* || { echo failed && exit 1; }
   " || err "Failed to run in docker" "$(line_output $LINENO)"
 }
