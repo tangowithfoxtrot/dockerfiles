@@ -2,7 +2,7 @@
 # check=experimental=all
 
 FROM alpine:latest AS builder
-ARG VERSION=8.10.1
+ARG VERSION=curl-8_11_0
 
 # the following build steps were heavily derived from:
 # https://github.com/moparisthebest/static-curl
@@ -15,7 +15,9 @@ RUN apk add --no-cache openssl-libs-static zlib-static
 
 RUN git clone https://github.com/curl/curl.git && \
   cd curl && \
-  git checkout "$(echo curl-${VERSION//./_})"
+  git checkout ${VERSION} || \
+  git checkout v${VERSION} || \
+  git checkout "$(echo ${VERSION//./_})"
 
 WORKDIR /work/curl
 # workdir needs to be ./curl for autoreconf to succeed
