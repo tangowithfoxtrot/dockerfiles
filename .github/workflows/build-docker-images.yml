@@ -1,4 +1,5 @@
 name: Build Docker Images
+run-name: "Running build script with args: ${{ inputs.SCRIPT_ARGS }}"
 
 on:
   # push:
