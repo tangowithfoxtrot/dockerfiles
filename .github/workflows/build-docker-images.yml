@@ -8,6 +8,11 @@ on:
   #   branches:
   #     - main
   workflow_dispatch:
+    inputs:
+      SCRIPT_ARGS:
+        description: "Arguments to pass to build-images.sh"
+        required: true
+        default: "--build"
 
 jobs:
   build:
@@ -31,7 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
 
       - name: Run build-images.sh
-        run: ./build-images.sh --build --push
+        run: ./build-images.sh ${{ inputs.SCRIPT_ARGS }}
         env:
           BUILD_PLATFORMS: linux/amd64,linux/arm64
           CURL_ARGS: '--header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}'
