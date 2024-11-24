@@ -97,7 +97,7 @@ do_in_docker() {
   log "Running in docker" "$(line_output $LINENO)"
 
   container_id=$(
-    docker run --rm -d -it \
+    docker run --rm -d $IS_TTY \
       -v "$CONTAINER_ENGINE_SOCKET":/var/run/docker.sock \
       -v "$REPO_ROOT:/$REPO_ROOT" \
       -w /"$REPO_ROOT" \
@@ -110,6 +110,7 @@ do_in_docker() {
       -e CONTAINER_REPO="$CONTAINER_REPO" \
       -e DOINDOCKER='#already in docker' \
       -e DOINDOCKER_BUILD_TOOLS="$DOINDOCKER_BUILD_TOOLS" \
+      -e GH_TOKEN="$(gh auth token || echo -n)" \
       -e NO_COLOR="$NO_COLOR" \
       -e REGISTRY_USER="$REGISTRY_USER" \
       -e REGISTRY_PAT="$REGISTRY_PAT" \
@@ -119,12 +120,10 @@ do_in_docker() {
       tail -f /dev/null
   )
 
-  trap 'docker rm -f "$container_id" >/dev/null || err "Failed to remove container" "$(line_output $LINENO)"' EXIT
-
-  docker exec -it "$container_id" /bin/sh -c "
-    apk update && apk add --no-cache $DOINDOCKER_BUILD_TOOLS
-    ./build-images.sh $* || exit 1
-  "
+  docker exec $IS_TTY "$container_id" /bin/sh -c "
+    apk add --no-cache $DOINDOCKER_BUILD_TOOLS
+    exec ./build-images.sh $* || { echo failed && exit 1; }
+  " || err "Failed to run in docker" "$(line_output $LINENO)"
 }
 
 # get the latest tag from a git repo
@@ -320,6 +319,10 @@ main() {
   pushd "$REPO_ROOT" >/dev/null || exit 1
   trap 'popd >/dev/null' EXIT
 
+  UPDATE=0
+  BUILD=0
+  PUSH=0
+
   while [[ $# -gt 0 ]]; do
     case $1 in
     -h | --help)
@@ -338,6 +341,11 @@ main() {
       # push to ttl.sh registry; good for testing
       CONTAINER_REGISTRY="ttl.sh"
       CONTAINER_REPO=""
+      PUSH=1
+      shift 1
+      ;;
+    -u | --update)
+      UPDATE=1
       shift 1
       ;;
     -b | --build)
@@ -348,64 +356,72 @@ main() {
       PUSH=1
       shift 1
       ;;
-    # --all)
-    #   build_docker
-    #   push_docker
-    #   shift 1
-    #   ;;
-    # --list)
-    #   list_docker
-    #   shift 1
-    #   ;;
-    # --clean)
-    #   clean_docker
-    #   shift 1
-    #   ;;
-    -u | --update)
-      # get_latest_upstream_version
-      UPDATE=1
-      shift 1
-      ;;
-    # --shell)
-    #   /usr/bin/env bash -i
-    #   shift 1
-    #   ;;
     *)
-      if [[ "$VERBOSE" == "1" ]]; then
-        set -x
-      fi
-
       CONTAINER_BUILD_CONTEXTS="$*"
-      if [[ -z "$CONTAINER_BUILD_CONTEXTS" ]]; then
-        CONTAINER_BUILD_CONTEXTS="$(find_contexts)"
-      fi
-
-      if [[ "$UPDATE" == "1" ]]; then
-        get_latest_upstream_version
-      fi
-
-      if [[ "$BUILD" == "1" ]]; then
-        build_docker "$@"
-      fi
-
-      if [[ "$PUSH" == "1" ]]; then
-        push_docker "$@"
-      fi
-
-      if [[ -z "$BUILD" && -z "$PUSH" && -z "$UPDATE" ]]; then
-        build_docker "$@"
-        push_docker "$@"
-      fi
       break
       ;;
     esac
   done
+
+  if [[ "$UPDATE" == "0" && "$BUILD" == "0" && "$PUSH" == "0" ]]; then
+    BUILD=1
+    PUSH=1
+  fi
+
+  if [[ -z "$CONTAINER_BUILD_CONTEXTS" ]]; then
+    CONTAINER_BUILD_CONTEXTS="$(find_contexts)"
+  fi
+
+  if [[ "$UPDATE" == "1" ]]; then
+    get_latest_upstream_version
+  fi
+
+  if [[ "$BUILD" == "1" ]]; then
+    build_docker "$@"
+  fi
+
+  if [[ "$PUSH" == "1" ]]; then
+    push_docker "$@"
+  fi
 }
 
-if [[ "$DOINDOCKER" != "1" ]]; then
-  main "$@"
+# Put any commands here that should subvert running in Docker and using the trap
+for arg in "$@"; do
+  case $arg in
+  -h | --help)
+    show_help
+    exit 0
+    ;;
+  -V | --version)
+    echo "$THIS_VERSION"
+    exit 0
+    ;;
+  esac
+done
+
+trap '
+  log "Exiting: Cleaning up Docker container $container_id" "$(line_output $LINENO)"; \
+  docker rm -f "$container_id" >/dev/null || \
+    err "Failed to remove container" "$(line_output $LINENO)"; \
+  log "Last command: $BASH_COMMAND" "$(line_output $LINENO)"; \
+  log "Stack trace:" "$(line_output $LINENO)"; \
+  log "$(caller)" "$(line_output $LINENO)"
+' EXIT
+
+if [[ "$VERBOSE" == "1" ]]; then
+  set -x
+fi
+
+if [[ -t 1 ]]; then
+  IS_TTY="-it"
+else
+  IS_TTY=""
+fi
+
+if [[ "$DOINDOCKER" == "1" ]]; then
+  do_in_docker "$@"
   exit $?
 else
-  do_in_docker "$@"
+  main "$@"
   exit $?
 fi
