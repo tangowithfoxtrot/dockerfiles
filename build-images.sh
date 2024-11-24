@@ -115,7 +115,6 @@ do_in_docker() {
       -e REGISTRY_USER="$REGISTRY_USER" \
       -e REGISTRY_PAT="$REGISTRY_PAT" \
       -e REPO_ROOT="$REPO_ROOT" \
-      -e TERM="${TERM:-xterm-256color}" \
       -u "$(id -u):$(id -g)" \
       --stop-signal SIGKILL \
       docker:latest \
