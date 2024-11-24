@@ -217,8 +217,15 @@ create_version_aliases() {
   tag_no_v_prefix="$version"
   tag_v_prefix="v$version"
 
-  echo -e "$version\n$tag_default\n$tag_no_v_prefix\n$tag_v_prefix\nlatest" |
-    sort -u |
+  {
+    # return the tags in a normalized order, with 'latest' at the end
+    echo "$version"
+    echo "$tag_default"
+    echo "$tag_no_v_prefix"
+    echo "$tag_v_prefix"
+    echo "latest"
+  } | sort -u |
+    awk '{if ($0 == "latest") {latest=$0} else {print $0}} END {if (latest) print latest}' |
     tr '\n' ' '
 }
 
