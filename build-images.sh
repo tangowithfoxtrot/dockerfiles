@@ -256,8 +256,6 @@ build_oci_uri() {
 
 build_docker() {
   local context="$1"
-  local tag="$2"
-  local push="$3"
   local version
 
   log "Building docker images" "$(line_output $LINENO)"
@@ -270,7 +268,6 @@ build_docker() {
     log "tags: $tags" "$(line_output $LINENO)"
     log "version: $version" "$(line_output $LINENO)"
 
-    # local oci_uri="$(build_oci_uri "$context" "$version" "$tags")"
     local oci_uri="$(build_oci_uri "$context" "$tags")"
     log "Building $oci_uri" "$(line_output $LINENO)"
     # shellcheck disable=SC2086
@@ -278,28 +275,28 @@ build_docker() {
       --platform "$BUILD_PLATFORMS" \
       --build-arg VERSION="$version" \
       -t "$oci_uri" \
-      $push \
       "$context" || { log "Failed to build $oci_uri. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
-  done
 
-  for tag in $tags; do
-    new_tag="${oci_uri%:*}:$tag"
-    log "Tagging $oci_uri as $new_tag" "$(line_output $LINENO)"
-    # shellcheck disable=SC2086
-    docker tag "$oci_uri" "$new_tag" || { log "Failed to tag $new_tag. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
+    for tag in $tags; do
+      new_tag="${oci_uri%:*}:$tag"
+      log "Tagging $oci_uri as $new_tag" "$(line_output $LINENO)"
+      # shellcheck disable=SC2086
+      docker tag "$oci_uri" "$new_tag" || { log "Failed to tag $new_tag. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
+    done
   done
 }
 
+# push the container images to the registry
 push_docker() {
   local context="$1"
-  local tag="$2"
   local version
 
   if [[ "$CONTAINER_REGISTRY" != "ttl.sh" ]]; then
     log "Logging in to $CONTAINER_REGISTRY" "$(line_output $LINENO)"
-    docker login \
-      --username "${REGISTRY_USER:-CONTAINER_REPO}" \
-      --password "$REGISTRY_PAT" "$CONTAINER_REGISTRY" ||
+    echo "$REGISTRY_PAT" |
+      docker login "$CONTAINER_REGISTRY" \
+        --username "${REGISTRY_USER:-CONTAINER_REPO}" \
+        --password-stdin ||
       { err "Failed to login to $CONTAINER_REGISTRY" "$(line_output $LINENO)" >/dev/stderr; }
   fi
 
@@ -315,11 +312,17 @@ push_docker() {
     log "tags: $tags" "$(line_output $LINENO)"
     log "version: $version" "$(line_output $LINENO)"
 
-    # local oci_uri="$(build_oci_uri "$context" "$version" "$tags")"
     local oci_uri="$(build_oci_uri "$context" "$tags")"
-    log "Building $oci_uri" "$(line_output $LINENO)"
+    log "Pushing $oci_uri" "$(line_output $LINENO)"
     # shellcheck disable=SC2086
     docker push "$oci_uri" || { log "Failed to push $oci_uri. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
+
+    for tag in $tags; do
+      new_tag="${oci_uri%:*}:$tag"
+      log "Pushing $new_tag" "$(line_output $LINENO)"
+      # shellcheck disable=SC2086
+      docker push "$new_tag" || { log "Failed to push $new_tag. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
+    done
   done
 }
 
