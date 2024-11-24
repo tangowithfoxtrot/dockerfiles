@@ -32,8 +32,31 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
+      - name: Set up Docker
+        uses: crazy-max/ghaction-setup-docker@26145a578dce008fee793528d031cd72c57d51af # v3.4.0
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+        with:
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
+            default-load=true
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: docker.io
+          username: ${{ github.actor }}
+          password: ${{ env.REGISTRY_PAT }}
 
       - name: Run build-images.sh
         run: ./build-images.sh ${{ inputs.SCRIPT_ARGS }}
@@ -43,10 +66,8 @@ jobs:
           CONTAINER_REGISTRY: docker.io
           CONTAINER_REPO: ${{ github.actor }}
           CONTAINER_ENGINE_SOCKET: /var/run/docker.sock # for DOINDOCKER
-          DOINDOCKER: 1
+          DOINDOCKER: 0
           DOINDOCKER_BUILD_TOOLS: bash curl github-cli git jq ncurses # Docker image is Alpine-based
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_PAT: ${{ env.REGISTRY_PAT }}
           ATTESTATION_ARGS: --attest type=sbom --attest type=provenance
           VERBOSE: 0
           NO_COLOR: 1
