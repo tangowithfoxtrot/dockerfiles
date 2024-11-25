@@ -288,6 +288,8 @@ build_docker() {
 
     local oci_uri="$(build_oci_uri "$context" "$tags")"
     log "Building $oci_uri" "$(line_output $LINENO)"
+    [[ -f "$context"/.nobuild ]] && log ".nobuild file found. Skipping $context" "$(line_output $LINENO)" && continue
+
     # shellcheck disable=SC2086
     docker build \
       --platform "$BUILD_PLATFORMS" \
