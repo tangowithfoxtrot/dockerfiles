@@ -107,9 +107,6 @@ fi
 # run the builds in a docker container
 # useful to ensure the build environment is consistent
 do_in_docker() {
-  if ! docker ps >/dev/null; then
-    err "Docker is not installed" "$(line_output $LINENO)"
-  fi
   log "Running in docker" "$(line_output $LINENO)"
 
   container_id=$(
@@ -357,14 +354,6 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case $1 in
-    -h | --help)
-      show_help
-      exit 0
-      ;;
-    -V | --version)
-      echo "$THIS_VERSION"
-      exit 0
-      ;;
     -v | --verbose)
       VERBOSE=1
       shift 1
@@ -430,6 +419,10 @@ for arg in "$@"; do
     ;;
   esac
 done
+
+if ! command -v docker &>/dev/null; then
+  err "Docker is not installed" "$(line_output $LINENO)"
+fi
 
 trap '
   log "Exiting: Cleaning up Docker container $container_id" "$(line_output $LINENO)"; \
