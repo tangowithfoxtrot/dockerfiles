@@ -222,7 +222,6 @@ create_version_aliases() {
 
   # normalize the version string
   if [[ ! "$version" =~ ^[0-9] ]]; then
-    # log "Replacing non-numeric characters with '.' in $version" "$(line_output $LINENO)"
     # replace non-numeric characters with '.'
     version="${version//[^0-9]/.}"
     # remove any leading or trailing dots
@@ -249,11 +248,9 @@ build_oci_uri() {
   if [[ "$CONTAINER_REGISTRY" == "ttl.sh" ]]; then
     log "Using ttl.sh registry" "$(line_output $LINENO)"
     local version="latest"
-    # local tags="latest"
   else
     local tags="$2"
   fi
-  # local version="$2"
 
   {
     # check each component of the URI
@@ -298,7 +295,6 @@ build_docker() {
     for tag in $tags; do
       new_tag="${oci_uri%:*}:$tag"
       log "Tagging $oci_uri as $new_tag" "$(line_output $LINENO)"
-      # shellcheck disable=SC2086
       docker tag "$oci_uri" "$new_tag" || { log "Failed to tag $new_tag. Continuing..." "$(line_output $LINENO)" >/dev/stderr; }
     done
   done
@@ -445,8 +441,6 @@ fi
 
 if [[ "$DOINDOCKER" == "1" ]]; then
   do_in_docker "$@"
-  exit $?
 else
   main "$@"
-  exit $?
 fi
