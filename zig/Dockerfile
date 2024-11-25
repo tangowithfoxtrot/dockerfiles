@@ -14,10 +14,10 @@ RUN apt-get update && \
 RUN <<eof
   case "$TARGETPLATFORM" in
     *"linux/amd64"*)
-      wget https://ziglang.org/builds/zig-linux-x86_64-${VERSION}.tar.xz -O zig.tar.xz
+      wget https://ziglang.org/download/${VERSION}/zig-linux-x86_64-${VERSION}.tar.xz -O zig.tar.xz
       mkdir -p zig && tar xvf zig.tar.xz --strip-components=1 -C zig;;
     *"linux/arm64"*)
-      wget https://ziglang.org/builds/zig-linux-aarch64-${VERSION}.tar.xz -O zig.tar.xz
+      wget https://ziglang.org/download/${VERSION}/zig-linux-aarch64-${VERSION}.tar.xz -O zig.tar.xz
       mkdir -p zig && tar xvf zig.tar.xz --strip-components=1 -C zig;;
     *)
       echo "Unsupported target platform: $TARGETPLATFORM";
