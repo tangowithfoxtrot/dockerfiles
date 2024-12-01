@@ -14,8 +14,10 @@ RUN apt-get update && \
 RUN wget https://ziglang.org/download/${VERSION}/zig-linux-$(uname -m)-${VERSION}.tar.xz -O zig.tar.xz && \
   mkdir -p zig && tar xvf zig.tar.xz --strip-components=1 -C zig
 
-FROM scratch
+FROM scratch as release
 
 # copy zig
 COPY --from=zig /zig /zig
 USER 65534:65534
+
+FROM release
