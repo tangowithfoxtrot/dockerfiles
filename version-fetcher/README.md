@@ -1,20 +1,14 @@
-# Curl
+# Version Fetcher
 
 ## Purpose
 
-Curl doesn't seem to distribute statically-linked binaries officially, so this image builds it from source.
+Fetch the latest version of various tools we want to build images for.
 
 ## Usage
 
 ### Running interactively
 
 ```bash
-docker run --rm -it tangowithfoxtrot/curl:latest --help
+context="$(git rev-parse --show-toplevel)"
+docker run --rm -it --mount type=bind,source="$context",target=/build_contexts version-fetcher
 ```
-
-### Using it in another docker image
-
-```dockerfile
-COPY --from=tangowithfoxtrot/curl:latest /bin/curl /usr/bin/curl
-```
-
