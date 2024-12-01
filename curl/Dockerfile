@@ -38,9 +38,11 @@ RUN LDFLAGS="-static" PKG_CONFIG="pkg-config --static" ./configure \
 RUN make -j$(nproc) V=1 LDFLAGS="-static -all-static"
 RUN strip src/curl
 
-FROM scratch
+FROM scratch as release
 
 COPY --from=builder /work/curl/src/curl /bin/curl
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 ENTRYPOINT ["/bin/curl"]
+
+FROM release
