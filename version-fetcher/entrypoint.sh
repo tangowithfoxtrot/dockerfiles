@@ -13,7 +13,6 @@ CONTAINER_BUILD_CONTEXTS="${CONTAINER_BUILD_CONTEXTS:-$(find_contexts)}" # direc
 THIS_VERSION="0.0.1"                                                     # version of this script
 VERBOSE="${VERBOSE:-0}"                                                  # set to '1' to enable verbose output
 
-
 # utility functions
 
 # mimic the help output from clap-rs
@@ -97,7 +96,7 @@ git_latest_tag() {
     log "helix" "$(line_output $LINENO)"
     git ls-remote --tags --refs --sort="v:refname" "$url" |
       awk -F/ '{ print $3 }' |
-      sort -V | head -n1
+      sort -r | grep -m1 -E '^[0-9]{2}\.[0-9]{2}'
     ;;
   *nano*)
     log "nano" "$(line_output $LINENO)"
@@ -110,9 +109,9 @@ git_latest_tag() {
       awk -F/ '{ print $3 }' |
       sort -r -V |
       grep -m 1 -e "^$project_alias-" ||
-    git ls-remote --tags --refs --sort="v:refname" "$url" |
+      git ls-remote --tags --refs --sort="v:refname" "$url" |
       awk -F/ '{ print $3 }' |
-      sort -r -V | head -n1
+        sort -r -V | head -n1
     ;;
   esac
 
@@ -130,11 +129,11 @@ fetch_latest_version() {
     return 0
   fi
 
-    # hopefully works for most git repos
-    { git_latest_tag "$url" "$project_alias" 2>/dev/null; } ||
+  # hopefully works for most git repos
+  { git_latest_tag "$url" "$project_alias" 2>/dev/null; } ||
     {
       # shellcheck disable=SC2086,SC2064
-      curl -sL $CURL_ARGS "$url" | jq -r '.tag_name' 2>/dev/null;
+      curl -sL $CURL_ARGS "$url" | jq -r '.tag_name' 2>/dev/null
     } ||
     { err "could not get latest version." "$(line_output $LINENO)"; }
 }
@@ -149,10 +148,10 @@ get_latest_upstream_version() {
     local ver="$(fetch_latest_version "$url" "$project_alias")"
 
     if [[ "$current_ver" = "$ver" ]]; then
-      log "Update not needed" "$(line_output $LINENO)"  
+      log "Update not needed" "$(line_output $LINENO)"
       continue
     fi
-    
+
     if [[ "$ver" == "NOVER" ]]; then
       log "No VERSION could be derived from $context/.url" "$(line_output $LINENO)"
       echo "latest" >"$context/.version"
