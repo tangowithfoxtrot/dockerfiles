@@ -15,11 +15,12 @@ ARG TARGET=x86_64-unknown-linux-musl
 
 RUN mkdir -p ~/.cargo && \
   echo "[profile.release]" > ~/.cargo/config.toml && \
-  echo "strip = true" >> ~/.cargo/config.toml && \
-  rustup target add $TARGET && \
-  cargo run --package=helix-loader --bin=hx-loader && \
-  cargo zigbuild --release --locked --target "$TARGET" && \
-  mv "./target/$TARGET/release" ./target/release && \
+  echo "strip = true" >> ~/.cargo/config.toml
+
+RUN rustup target add $TARGET
+RUN cargo run --package=helix-loader --bin=hx-loader
+RUN cargo zigbuild --release --locked --target "$TARGET"
+RUN mv "./target/$TARGET/release" ./target/release && \
   rm -rf ./runtime/grammars/sources
 
 FROM tangowithfoxtrot/devcontainer AS dev
