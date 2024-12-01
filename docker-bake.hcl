@@ -153,6 +153,5 @@ target "version-fetcher" {
   context    = "./"
   dockerfile = "./version-fetcher/Dockerfile"
   target     = "release"
-  output     = ["type=cacheonly"]
   tags       = ["version-fetcher"]
 }
