@@ -33,7 +33,6 @@ RUN ./autogen.sh CFLAGS="-O2 -Wall --static" && \
   make
 
 RUN ldd ./src/nano 2>&1 | grep 'not a dynamic executable' || exit 1
-
 RUN strip ./src/nano
 
 FROM tangowithfoxtrot/devcontainer AS dev
