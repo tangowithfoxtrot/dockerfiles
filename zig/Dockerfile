@@ -18,4 +18,4 @@ FROM scratch
 
 # copy zig
 COPY --from=zig /zig /zig
-
+USER 65534:65534
