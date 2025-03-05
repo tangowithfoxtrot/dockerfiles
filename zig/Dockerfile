@@ -3,7 +3,7 @@
 
 FROM --platform=$BUILDPLATFORM ubuntu:latest AS zig
 ARG TARGETPLATFORM
-ARG VERSION=0.13.0
+ARG VERSION=0.14.0
 WORKDIR /
 
 RUN apt-get update && \
